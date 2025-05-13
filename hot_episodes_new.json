@@ -7,56 +7,24 @@
         "podcastName": "数据会说话",
         "logoURL": "https://xyzrank.justinbot.com/FjdSuofAaysCYTbf0jhw620PE8oU.jpg@small",
         "link": "https://www.xiaoyuzhoufm.com/episode/681c84bd24f855934693ffb9",
-        "playCount": 7273,
-        "commentCount": 147,
+        "playCount": 8201,
+        "commentCount": 148,
         "subscription": 7788,
         "duration": 33,
         "postTime": "2025-05-08T10:25:12.609Z",
         "primaryGenreName": "",
         "totalEpisodesCount": 4,
-        "openRate": 0.9338726245505906,
-        "lastReleaseDateDayCount": 3.3786629282407405
-      },
-      {
-        "title": "11月 饮茶粤海未能忘",
-        "podcastID": "5ddde93ae480d186ba4745ee71d29cde",
-        "podcastName": "忽略2024",
-        "logoURL": "https://xyzrank.justinbot.com/FoD7s4b0GCaPdU01BtAmZTIrhToB.jpg@small",
-        "link": "https://www.xiaoyuzhoufm.com/episode/680f4d278aed253fa3028be6",
-        "playCount": 1969,
-        "commentCount": 92,
-        "subscription": 1421,
-        "duration": 74,
-        "postTime": "2025-04-28T10:01:41.319Z",
-        "primaryGenreName": "",
-        "totalEpisodesCount": 2,
-        "openRate": 1.3856439127375089,
-        "lastReleaseDateDayCount": 13.394997303240741
-      },
-      {
-        "title": "放假前奏：旅行趣事一箩筐",
-        "podcastID": "f21eea5dc4f16e401df1edf63b84ea30",
-        "podcastName": "伦家不要嘛",
-        "logoURL": "https://is1-ssl.mzstatic.com/image/thumb/Podcasts221/v4/da/fc/15/dafc154a-f07c-06be-0765-415df06a44fa/mza_16167900013746882229.jpg/100x100bb.jpg",
-        "link": "https://www.xiaoyuzhoufm.com/episode/680f667b7a449ae858359c42",
-        "playCount": 1479,
-        "commentCount": 13,
-        "subscription": 4362,
-        "duration": 68,
-        "postTime": "2025-04-28T11:39:27.462Z",
-        "primaryGenreName": "休闲",
-        "totalEpisodesCount": 18,
-        "openRate": 0.3390646492434663,
-        "lastReleaseDateDayCount": 13.32710212962963
+        "openRate": 1.053030303030303,
+        "lastReleaseDateDayCount": 4.378662662037037
       }
     ],
     "medianValues": {
-      "playCount": 1969,
-      "commentCount": 92,
-      "interactiveRate": 0.02021174205967276,
-      "openRate": 0.9338726245505906,
-      "duration": 68,
-      "lastReleaseDateDayCount": 13.32710212962963
+      "playCount": 8201,
+      "commentCount": 148,
+      "interactiveRate": 0.01804657968540422,
+      "openRate": 1.053030303030303,
+      "duration": 33,
+      "lastReleaseDateDayCount": 4.378662662037037
     }
   },
   "type": 3
