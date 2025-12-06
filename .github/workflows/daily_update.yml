@@ -29,6 +29,10 @@ jobs:
       run: |
         python update_data.py
 
+    - name: Send to Feishu
+      run: |
+        python send_top_episodes.py ${{ secrets.FEISHU_WEBHOOK_URL }}
+
     - name: Commit files
       run: |
         if [ -z "$(git status --porcelain)" ]; then
