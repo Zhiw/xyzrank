@@ -1,6 +1,68 @@
 import json
+import subprocess
 import requests
 import sys
+
+
+def get_last_commit_content(file_path):
+    """获取上次提交时的文件内容"""
+    try:
+        result = subprocess.run(
+            ["git", "show", f"HEAD:{file_path}"],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        return json.loads(result.stdout)
+    except (subprocess.CalledProcessError, json.JSONDecodeError):
+        return None
+
+
+def get_top_list_set(episodes, exclude_genres, top_n):
+    """获取 Top N 列表的集合（标题+播客名）"""
+    filtered = [
+        ep for ep in episodes
+        if ep.get("primaryGenreName") not in exclude_genres
+    ]
+    sorted_eps = sorted(filtered, key=lambda x: x.get("playCount", 0), reverse=True)[:top_n]
+    return set((ep.get("title"), ep.get("podcastName")) for ep in sorted_eps)
+
+
+def get_new_episodes(file_path, exclude_genres, top_n):
+    """获取新增的播客列表"""
+    # 获取当前文件内容
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            current_data = json.load(f)
+        current_episodes = current_data.get("data", {}).get("episodes", [])
+    except (FileNotFoundError, json.JSONDecodeError):
+        return None  # 文件不存在或解析失败
+
+    # 获取上次提交的内容
+    last_data = get_last_commit_content(file_path)
+    if not last_data:
+        return None  # 无法获取上次内容，返回全部
+
+    last_episodes = last_data.get("data", {}).get("episodes", [])
+
+    # 获取当前和上次的 Top N 集合
+    current_set = get_top_list_set(current_episodes, exclude_genres, top_n)
+    last_set = get_top_list_set(last_episodes, exclude_genres, top_n)
+
+    # 找出新增的（在当前列表中但不在上次列表中）
+    new_keys = current_set - last_set
+
+    if not new_keys:
+        return []  # 没有新增
+
+    # 返回新增的完整播客信息
+    filtered = [
+        ep for ep in current_episodes
+        if ep.get("primaryGenreName") not in exclude_genres
+    ]
+    sorted_eps = sorted(filtered, key=lambda x: x.get("playCount", 0), reverse=True)[:top_n]
+
+    return [ep for ep in sorted_eps if (ep.get("title"), ep.get("podcastName")) in new_keys]
 
 
 def load_episodes(file_path):
@@ -49,7 +111,7 @@ def format_episode_for_feishu(episode, rank):
     }
 
 
-def build_feishu_message(episodes, title, top_n):
+def build_feishu_message(episodes, title):
     """构建飞书消息卡片"""
     content_lines = []
 
@@ -99,32 +161,39 @@ def send_to_feishu(webhook_url, message):
 
 
 def process_and_send(webhook_url, file_path, title, top_n=20):
-    """处理单个数据文件并发送"""
+    """处理单个数据文件并发送（只发送新增的播客）"""
+    exclude_genres = ["喜剧"]
+
     print(f"\n{'='*60}")
     print(f"处理: {title}")
     print(f"{'='*60}")
 
-    # 加载数据
-    print(f"正在加载数据: {file_path}")
-    episodes = load_episodes(file_path)
-    print(f"共加载 {len(episodes)} 个剧集")
+    # 获取新增的播客
+    new_episodes = get_new_episodes(file_path, exclude_genres, top_n)
 
-    # 过滤和排序
-    print(f"正在筛选播放量前{top_n}（过滤喜剧类型）...")
-    top_episodes = filter_and_sort_episodes(episodes, exclude_genres=["喜剧"], top_n=top_n)
-    print(f"筛选出 {len(top_episodes)} 个剧集")
+    if new_episodes is None:
+        # 无法比较（首次运行或 git 错误），发送完整列表
+        print("无法获取历史数据，发送完整列表")
+        episodes = load_episodes(file_path)
+        new_episodes = filter_and_sort_episodes(episodes, exclude_genres=exclude_genres, top_n=top_n)
+    elif len(new_episodes) == 0:
+        print("没有新增播客，跳过发送")
+        return None
+
+    print(f"发现 {len(new_episodes)} 个新增播客")
 
     # 打印预览
-    print("\n预览:")
+    print("\n新增播客预览:")
     print("-" * 60)
-    for i, ep in enumerate(top_episodes, 1):
+    for i, ep in enumerate(new_episodes, 1):
         formatted = format_episode_for_feishu(ep, i)
         print(f"{i}. {formatted['title'][:40]}...")
         print(f"   {formatted['podcast']} | {formatted['playCount']} | {formatted['genre']}")
     print("-" * 60)
 
-    # 构建消息
-    message = build_feishu_message(top_episodes, title, top_n)
+    # 构建消息（标题加上"新增"标识）
+    msg_title = f"{title}（新增 {len(new_episodes)} 个）"
+    message = build_feishu_message(new_episodes, msg_title)
 
     # 发送到飞书
     print("\n正在发送到飞书...")
@@ -154,16 +223,20 @@ def main():
 
     # 处理每个数据源
     success_count = 0
+    skip_count = 0
     for source in data_sources:
         try:
-            if process_and_send(webhook_url, source["file"], source["title"], top_n=20):
+            result = process_and_send(webhook_url, source["file"], source["title"], top_n=20)
+            if result is True:
                 success_count += 1
+            elif result is None:
+                skip_count += 1
         except FileNotFoundError:
             print(f"文件不存在: {source['file']}")
         except Exception as e:
             print(f"处理 {source['file']} 时出错: {e}")
 
-    print(f"\n完成! 成功发送 {success_count}/{len(data_sources)} 条消息")
+    print(f"\n完成! 发送 {success_count} 条，跳过 {skip_count} 条（无新增）")
 
 
 if __name__ == "__main__":
